@@ -3,11 +3,6 @@
 a union-find / path compression percolation simulation in zig with `matplotlib` visualization
 
 
-the following gif was generated with:
-```
-» ANI_SAVE=animation.gif GRID_SIZE=16 ./run
-```
-
 ![percolation](./animation.gif)
 
 > [!NOTE]
@@ -37,6 +32,12 @@ GRID_SIZE=20 P=0.6 SEED=42 ./run
 # Save animation to a file
 ANI_SAVE=animation.gif ./run
 ```
+
+the gif above was generated with:
+```
+» ANI_SAVE=animation.gif GRID_SIZE=16 ./run
+```
+
 
 You can also run the steps manually:
 

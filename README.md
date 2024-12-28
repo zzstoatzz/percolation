@@ -49,10 +49,3 @@ GRID_SIZE=20  # Grid size (default: 10)
 P=0.6         # Bond probability (default: 0.5) 
 SEED=42       # Random seed (default: current timestamp)
 ```
-
-## Dependencies
-
-- Zig 0.11.0+
-- Python 3.8+
-  - numpy 
-  - matplotlib

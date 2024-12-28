@@ -27,7 +27,7 @@ chmod +x run
 ./run
 
 # Run with custom simulation parameters
-GRID_SIZE=20 P=0.6 SEED=42 ./run
+GRID_SIZE=32 P=0.6 SEED=42 ./run
 
 # Save animation to a file
 ANI_SAVE=animation.gif ./run
@@ -58,12 +58,12 @@ The simulation can be controlled via environment variables:
 
 ```bash
 # Simulation parameters
-GRID_SIZE=32    # Grid size (default: 16)
+GRID_SIZE=128    # Grid size (default: 16)
 P=0.6           # Bond probability (default: 0.5) 
 SEED=42         # Random seed (default: current timestamp)
 
 # Animation parameters
-ANI_SAVE=""     # Path to save animation (e.g. "animation.gif")
+ANI_SAVE="animation.gif"     # Path to save animation (e.g. "animation.gif")
 ANI_INTERVAL=50 # Animation speed in milliseconds (default: 50)
 ANI_DPI=100     # DPI for saved animation (default: 100)
 ```

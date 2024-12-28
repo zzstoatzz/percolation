@@ -1,0 +1,8 @@
+#! /bin/bash
+
+# Build and run with environment variables
+zig build
+GRID_SIZE=${GRID_SIZE:-10} P=${P:-0.5} SEED=${SEED:-$(date +%s)} ./zig-out/bin/percolation
+
+# Visualize
+uv run read.py

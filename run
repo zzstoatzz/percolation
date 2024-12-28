@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# Exit on error
+set -e
+
 # Default values
 GRID_SIZE=${GRID_SIZE:-10}
 P=${P:-0.5}
@@ -9,20 +12,21 @@ ANI_INTERVAL=${ANI_INTERVAL:-50}
 ANI_DPI=${ANI_DPI:-100}
 
 # Build and run with environment variables
-zig build
-./zig-out/bin/percolation
+zig build && {
+    ./zig-out/bin/percolation
 
-# Construct animation arguments
-ANI_ARGS=""
-if [ ! -z "$ANI_SAVE" ]; then
-    ANI_ARGS="--save $ANI_SAVE"
-fi
-if [ ! -z "$ANI_INTERVAL" ]; then
-    ANI_ARGS="$ANI_ARGS --interval $ANI_INTERVAL"
-fi
-if [ ! -z "$ANI_DPI" ]; then
-    ANI_ARGS="$ANI_ARGS --dpi $ANI_DPI"
-fi
+    # Construct animation arguments
+    ANI_ARGS=""
+    if [ ! -z "$ANI_SAVE" ]; then
+        ANI_ARGS="--save $ANI_SAVE"
+    fi
+    if [ ! -z "$ANI_INTERVAL" ]; then
+        ANI_ARGS="$ANI_ARGS --interval $ANI_INTERVAL"
+    fi
+    if [ ! -z "$ANI_DPI" ]; then
+        ANI_ARGS="$ANI_ARGS --dpi $ANI_DPI"
+    fi
 
-# Visualize
-uv run read.py $ANI_ARGS
+    # Visualize
+    uv run read.py $ANI_ARGS
+}

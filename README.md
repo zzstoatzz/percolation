@@ -46,7 +46,7 @@ You can also run the steps manually:
 zig build
 
 # Run simulation with custom parameters
-GRID_SIZE=20 P=0.6 SEED=42 ./zig-out/bin/percolation
+GRID_SIZE=16 P=0.6 SEED=42 ./zig-out/bin/percolation
 
 # Visualize (with optional animation parameters)
 uv run read.py --save animation.gif --interval 100 --dpi 150
@@ -58,7 +58,7 @@ The simulation can be controlled via environment variables:
 
 ```bash
 # Simulation parameters
-GRID_SIZE=20    # Grid size (default: 10)
+GRID_SIZE=32    # Grid size (default: 16)
 P=0.6           # Bond probability (default: 0.5) 
 SEED=42         # Random seed (default: current timestamp)
 

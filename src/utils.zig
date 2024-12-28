@@ -121,7 +121,7 @@ pub fn writeBondsAndStates(
     try buffered_states.flush();
 }
 
-fn generateBonds(perc: *root.Percolation, cfg: Config, allocator: std.mem.Allocator) !std.ArrayList(root.Bond) {
+pub fn generateBonds(perc: *root.Percolation, cfg: Config, allocator: std.mem.Allocator) !std.ArrayList(root.Bond) {
     var bonds = std.ArrayList(root.Bond).init(allocator);
     try perc.generateBonds(cfg.p, &bonds);
 
@@ -140,12 +140,12 @@ fn generateBonds(perc: *root.Percolation, cfg: Config, allocator: std.mem.Alloca
     return bonds;
 }
 
-fn printUsage() void {
+pub fn printUsage() void {
     const usage =
         \\Usage: percolation [options]
         \\
         \\Options:
-        \\  -s, --size <N>     Grid size (default: 10)
+        \\  -s, --size <N>     Grid size (default: 16)
         \\  -p <float>         Bond probability [0.0-1.0] (default: 0.5)
         \\  --seed <N>         Random seed (default: timestamp)
         \\  --out <dir>        Output directory (default: ".")
@@ -168,7 +168,7 @@ pub fn parseArgs(allocator: std.mem.Allocator) !Config {
     _ = args.skip();
 
     var config = Config{
-        .size = 10,
+        .size = 16,
         .p = 0.5,
         .seed = @intCast(std.time.timestamp()),
         .out_dir = ".",

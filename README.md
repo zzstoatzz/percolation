@@ -1,5 +1,7 @@
 # simulate bond percolation
 
+see the related [bsky post](https://bsky.app/profile/alternatebuild.dev/post/3lee35detak2p)
+
 a union-find / path compression percolation simulation in zig with `matplotlib` visualization
 
 

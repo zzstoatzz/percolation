@@ -113,14 +113,19 @@ def animate_percolation(save_path=None, interval=50, dpi=100):
     # Create custom colormap
     from matplotlib.colors import LinearSegmentedColormap
     colors = [
-        '#f8f9fa',  # Almost white for unconnected
-        '#cfe1b9',  # Light sage
-        '#97d4bb',  # Mint
-        '#437c90',  # Steel blue
-        '#2d5362',  # Deep blue-green
+        '#f8f9fa',  # Base - Almost white
+        '#e9ecef',  # Smallest clusters - Lightest pastel
+        '#dee2e6',  # Very small clusters
+        '#dbe4dc',  # Small clusters - Light sage
+        '#c4d5ba',  # Medium-small - Pastel sage
+        '#aecbac',  # Medium - Muted green
+        '#8fc1a9',  # Medium-large - Seafoam
+        '#84b8d0',  # Large - Sky blue
+        '#7d9fc1',  # Very large - Steel blue
+        '#6d8a96',  # Largest - Deep blue-gray
     ]
-    n_bins = 256
-    custom_cmap = LinearSegmentedColormap.from_list('earth', colors, N=n_bins)
+    n_bins = 256  # More color bins for smoother transitions
+    custom_cmap = LinearSegmentedColormap.from_list('pastel_earth', colors, N=n_bins)
 
     def init() -> list[Any]:
         bond_collection.set_segments([])

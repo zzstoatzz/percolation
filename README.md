@@ -2,6 +2,14 @@
 
 a union-find / path compression percolation simulation in zig with `matplotlib` visualization
 
+
+the following gif was generated with:
+```
+» ANI_SAVE=animation.gif GRID_SIZE=16 ./run
+```
+
+![percolation](./animation.gif)
+
 > [!NOTE]
 > inspired by the work of [Dr. Robert M. Ziff](https://scholar.google.com/citations?hl=en&user=CUqzFcEAAAAJ)
 
@@ -23,8 +31,11 @@ The simplest way to run the simulation is using the provided `run` script:
 chmod +x run
 ./run
 
-# Run with custom parameters
+# Run with custom simulation parameters
 GRID_SIZE=20 P=0.6 SEED=42 ./run
+
+# Save animation to a file
+ANI_SAVE=animation.gif ./run
 ```
 
 You can also run the steps manually:
@@ -36,8 +47,8 @@ zig build
 # Run simulation with custom parameters
 GRID_SIZE=20 P=0.6 SEED=42 ./zig-out/bin/percolation
 
-# Visualize
-uv run read.py
+# Visualize (with optional animation parameters)
+uv run read.py --save animation.gif --interval 100 --dpi 150
 ```
 
 ## Configuration
@@ -45,7 +56,13 @@ uv run read.py
 The simulation can be controlled via environment variables:
 
 ```bash
-GRID_SIZE=20  # Grid size (default: 10)
-P=0.6         # Bond probability (default: 0.5) 
-SEED=42       # Random seed (default: current timestamp)
+# Simulation parameters
+GRID_SIZE=20    # Grid size (default: 10)
+P=0.6           # Bond probability (default: 0.5) 
+SEED=42         # Random seed (default: current timestamp)
+
+# Animation parameters
+ANI_SAVE=""     # Path to save animation (e.g. "animation.gif")
+ANI_INTERVAL=50 # Animation speed in milliseconds (default: 50)
+ANI_DPI=100     # DPI for saved animation (default: 100)
 ```

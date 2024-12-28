@@ -3,6 +3,7 @@
 # ///
 
 import json
+import argparse
 from itertools import product
 from pathlib import Path
 
@@ -50,7 +51,7 @@ def load_percolation():
     return meta, np.array(states), bonds
 
 
-def animate_percolation():
+def animate_percolation(save_path=None, interval=50, dpi=100):
     meta, states, bonds = load_percolation()
     L = meta["size"]
     p = meta["p"]
@@ -134,14 +135,28 @@ def animate_percolation():
         update,
         frames=len(states),
         init_func=init,
-        interval=50,
+        interval=interval,
         blit=True,
         cache_frame_data=False,
     )
 
-    plt.show()
+    if save_path:
+        # Save animation
+        writer = animation.PillowWriter(fps=1000/interval)  # Convert interval to fps
+        ani.save(save_path, writer=writer, dpi=dpi)
+    else:
+        plt.show()
+    
     return ani
 
+def main():
+    parser = argparse.ArgumentParser(description='Visualize percolation animation')
+    parser.add_argument('--save', type=str, help='Path to save the animation (e.g. animation.gif)')
+    parser.add_argument('--interval', type=int, default=50, help='Animation interval in milliseconds')
+    parser.add_argument('--dpi', type=int, default=100, help='DPI for saved animation')
+    
+    args = parser.parse_args()
+    animate_percolation(args.save, args.interval, args.dpi)
 
 if __name__ == "__main__":
-    animate_percolation()
+    main()

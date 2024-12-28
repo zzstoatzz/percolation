@@ -35,7 +35,7 @@ ANI_SAVE=animation.gif ./run
 
 the gif above was generated with:
 ```
-» ANI_SAVE=animation.gif GRID_SIZE=16 ./run
+ANI_SAVE=animation.gif GRID_SIZE=10 ./run
 ```
 
 

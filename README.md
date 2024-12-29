@@ -29,7 +29,7 @@ chmod +x run
 ./run
 
 # Run with custom simulation parameters
-GRID_SIZE=32 P=0.6 SEED=42 ./run
+GRID_SIZE=32 P=0.6 SEED=42 TOP_N=5 ./run
 
 # Save animation to a file
 ANI_SAVE=animation.gif ./run
@@ -48,7 +48,7 @@ You can also run the steps manually:
 zig build
 
 # Run simulation with custom parameters
-GRID_SIZE=16 P=0.6 SEED=42 ./zig-out/bin/percolation
+GRID_SIZE=16 P=0.6 SEED=42 TOP_N=5 ./zig-out/bin/percolation
 
 # Visualize (with optional animation parameters)
 uv run read.py --save animation.gif --interval 100 --dpi 150
@@ -63,6 +63,7 @@ The simulation can be controlled via environment variables:
 GRID_SIZE=128    # Grid size (default: 16)
 P=0.6           # Bond probability (default: 0.5) 
 SEED=42         # Random seed (default: current timestamp)
+TOP_N=5         # Number of top cluster sizes to track (default: 3)
 
 # Animation parameters
 ANI_SAVE="animation.gif"     # Path to save animation (e.g. "animation.gif")

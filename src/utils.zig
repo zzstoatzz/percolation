@@ -6,29 +6,56 @@ pub const Config = struct {
     p: f64,
     seed: u64,
     out_dir: []const u8,
+    top_n: usize = 3,
 };
 
 pub const State = struct {
+    roots: []usize,
     sizes: []usize,
+    top_sizes: []usize,
     allocator: std.mem.Allocator,
 
-    pub fn init(allocator: std.mem.Allocator, size: usize) !State {
+    pub fn init(allocator: std.mem.Allocator, size: usize, top_n: usize) !State {
+        const roots = try allocator.alloc(usize, size * size);
         const sizes = try allocator.alloc(usize, size * size);
-        return .{ .sizes = sizes, .allocator = allocator };
+        const top_sizes = try allocator.alloc(usize, top_n);
+        @memset(top_sizes, 0);
+        return .{ .roots = roots, .sizes = sizes, .top_sizes = top_sizes, .allocator = allocator };
     }
 
     pub fn deinit(self: *State) void {
+        self.allocator.free(self.roots);
         self.allocator.free(self.sizes);
+        self.allocator.free(self.top_sizes);
     }
 };
 
-pub fn captureState(states: *std.ArrayList(State), perc: *root.Percolation, size: usize) !void {
-    var state = try State.init(states.allocator, size);
+pub fn captureState(states: *std.ArrayList(State), perc: *root.Percolation, size: usize, top_n: usize) !void {
+    var state = try State.init(states.allocator, size, top_n);
 
+    // Single pass: capture roots, sizes, and track top N clusters
     var i: usize = 0;
     while (i < size * size) : (i += 1) {
-        const root_val = perc.uf.find(i);
-        state.sizes[i] = perc.uf.size[root_val];
+        const root_i = perc.uf.find(i);
+        state.roots[i] = root_i;
+        state.sizes[i] = perc.uf.size[root_i];
+
+        // If this is a root node with size > 1, check if it's in top N
+        if (root_i == i and state.sizes[i] > 1) {
+            // Find insertion point in top_sizes (which maintains descending order)
+            const size_i = state.sizes[i];
+            var j: usize = 0;
+            while (j < top_n and size_i <= state.top_sizes[j]) : (j += 1) {}
+
+            if (j < top_n) {
+                // Shift smaller sizes down
+                var k: usize = top_n - 1;
+                while (k > j) : (k -= 1) {
+                    state.top_sizes[k] = state.top_sizes[k - 1];
+                }
+                state.top_sizes[j] = size_i;
+            }
+        }
     }
 
     try states.append(state);
@@ -67,8 +94,14 @@ pub fn writeBondsAndStates(
     const bonds_path = try std.fs.path.join(allocator, &[_][]const u8{ cfg.out_dir, "bonds.bin" });
     defer allocator.free(bonds_path);
 
-    const states_path = try std.fs.path.join(allocator, &[_][]const u8{ cfg.out_dir, "states.bin" });
-    defer allocator.free(states_path);
+    const roots_path = try std.fs.path.join(allocator, &[_][]const u8{ cfg.out_dir, "roots.bin" });
+    defer allocator.free(roots_path);
+
+    const sizes_path = try std.fs.path.join(allocator, &[_][]const u8{ cfg.out_dir, "sizes.bin" });
+    defer allocator.free(sizes_path);
+
+    const top_sizes_path = try std.fs.path.join(allocator, &[_][]const u8{ cfg.out_dir, "top_sizes.bin" });
+    defer allocator.free(top_sizes_path);
 
     // Write bonds
     const bonds_file = try std.fs.cwd().createFile(bonds_path, .{});
@@ -92,33 +125,59 @@ pub fn writeBondsAndStates(
     }
     try buffered_bonds.flush();
 
-    // Write states
-    const states_file = try std.fs.cwd().createFile(states_path, .{});
-    defer states_file.close();
-    var buffered_states = std.io.bufferedWriter(states_file.writer());
-    const states_writer = buffered_states.writer();
+    // Write roots and sizes
+    const roots_file = try std.fs.cwd().createFile(roots_path, .{});
+    defer roots_file.close();
+    var buffered_roots = std.io.bufferedWriter(roots_file.writer());
+    const roots_writer = buffered_roots.writer();
 
-    // Pre-allocate buffer for entire state
+    const sizes_file = try std.fs.cwd().createFile(sizes_path, .{});
+    defer sizes_file.close();
+    var buffered_sizes = std.io.bufferedWriter(sizes_file.writer());
+    const sizes_writer = buffered_sizes.writer();
+
+    const top_sizes_file = try std.fs.cwd().createFile(top_sizes_path, .{});
+    defer top_sizes_file.close();
+    var buffered_top_sizes = std.io.bufferedWriter(top_sizes_file.writer());
+    const top_sizes_writer = buffered_top_sizes.writer();
+
+    // Pre-allocate buffers
     const buffer_size = cfg.size * cfg.size * @sizeOf(u32);
-    var write_buffer = try allocator.alloc(u8, buffer_size);
-    defer allocator.free(write_buffer);
+    var roots_buffer = try allocator.alloc(u8, buffer_size);
+    defer allocator.free(roots_buffer);
+    var sizes_buffer = try allocator.alloc(u8, buffer_size);
+    defer allocator.free(sizes_buffer);
+    var top_sizes_buffer = try allocator.alloc(u8, cfg.top_n * @sizeOf(u32));
+    defer allocator.free(top_sizes_buffer);
 
     std.debug.print("Writing {d} states to file...\n", .{states.len});
     for (states, 0..) |state, i| {
-        // Convert sizes to bytes
+        // Convert roots and sizes to bytes
+        for (state.roots, 0..) |root_val, j| {
+            const root_bytes = std.mem.asBytes(&@as(u32, @intCast(root_val)));
+            @memcpy(roots_buffer[j * 4 .. (j + 1) * 4], root_bytes);
+        }
         for (state.sizes, 0..) |size_val, j| {
-            const bytes = std.mem.asBytes(&@as(u32, @intCast(size_val)));
-            @memcpy(write_buffer[j * 4 .. (j + 1) * 4], bytes);
+            const size_bytes = std.mem.asBytes(&@as(u32, @intCast(size_val)));
+            @memcpy(sizes_buffer[j * 4 .. (j + 1) * 4], size_bytes);
+        }
+        for (state.top_sizes, 0..) |size_val, j| {
+            const size_bytes = std.mem.asBytes(&@as(u32, @intCast(size_val)));
+            @memcpy(top_sizes_buffer[j * 4 .. (j + 1) * 4], size_bytes);
         }
 
-        try states_writer.writeAll(write_buffer);
+        try roots_writer.writeAll(roots_buffer);
+        try sizes_writer.writeAll(sizes_buffer);
+        try top_sizes_writer.writeAll(top_sizes_buffer);
 
         if ((i + 1) % (states.len / 10) == 0) {
             const percent = (i + 1) * 100 / states.len;
             std.debug.print("Writing states: {d}% ({d}/{d})\n", .{ percent, i + 1, states.len });
         }
     }
-    try buffered_states.flush();
+    try buffered_roots.flush();
+    try buffered_sizes.flush();
+    try buffered_top_sizes.flush();
 }
 
 pub fn generateBonds(perc: *root.Percolation, cfg: Config, allocator: std.mem.Allocator) !std.ArrayList(root.Bond) {
@@ -149,12 +208,14 @@ pub fn printUsage() void {
         \\  -p <float>         Bond probability [0.0-1.0] (default: 0.5)
         \\  --seed <N>         Random seed (default: timestamp)
         \\  --out <dir>        Output directory (default: ".")
+        \\  --top-n <N>        Number of top cluster sizes to track (default: 3)
         \\  -h, --help         Print this help message
         \\
         \\Environment Variables (fallback):
         \\  GRID_SIZE          Same as --size
         \\  P                  Same as -p
         \\  SEED              Same as --seed
+        \\  TOP_N             Same as --top-n
         \\
     ;
     std.debug.print("{s}", .{usage});
@@ -172,6 +233,7 @@ pub fn parseArgs(allocator: std.mem.Allocator) !Config {
         .p = 0.5,
         .seed = @intCast(std.time.timestamp()),
         .out_dir = ".",
+        .top_n = 3,
     };
 
     var env_map = try std.process.getEnvMap(allocator);
@@ -186,6 +248,9 @@ pub fn parseArgs(allocator: std.mem.Allocator) !Config {
     }
     if (env_map.get("SEED")) |seed_str| {
         config.seed = try std.fmt.parseInt(u64, seed_str, 10);
+    }
+    if (env_map.get("TOP_N")) |top_n_str| {
+        config.top_n = try std.fmt.parseInt(usize, top_n_str, 10);
     }
 
     // Then parse CLI args which override environment variables
@@ -220,6 +285,13 @@ pub fn parseArgs(allocator: std.mem.Allocator) !Config {
                 printUsage();
                 return error.InvalidArgument;
             };
+        } else if (std.mem.eql(u8, arg, "--top-n")) {
+            const top_n_str = args.next() orelse {
+                std.debug.print("Error: Missing value for top-n argument\n", .{});
+                printUsage();
+                return error.InvalidArgument;
+            };
+            config.top_n = try std.fmt.parseInt(usize, top_n_str, 10);
         }
     }
 
@@ -230,6 +302,10 @@ pub fn parseArgs(allocator: std.mem.Allocator) !Config {
     }
     if (config.p < 0.0 or config.p > 1.0) {
         std.debug.print("Error: p must be between 0.0 and 1.0\n", .{});
+        return error.InvalidArgument;
+    }
+    if (config.top_n < 1) {
+        std.debug.print("Error: top-n must be at least 1\n", .{});
         return error.InvalidArgument;
     }
 

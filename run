@@ -7,6 +7,7 @@ set -e
 GRID_SIZE=${GRID_SIZE:-10}
 P=${P:-0.5}
 SEED=${SEED:-$(date +%s)}
+TOP_N=${TOP_N:-3}
 ANI_SAVE=${ANI_SAVE:-""}
 ANI_INTERVAL=${ANI_INTERVAL:-50}
 ANI_DPI=${ANI_DPI:-100}

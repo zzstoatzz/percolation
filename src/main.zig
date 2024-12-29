@@ -13,7 +13,8 @@ pub fn main() !void {
     std.debug.print("\nGrid size: {d}x{d} ({d} sites)\n", .{ cfg.size, cfg.size, cfg.size * cfg.size });
     std.debug.print("Bond probability: {d:.2}\n", .{cfg.p});
     std.debug.print("Random seed: {d}\n", .{cfg.seed});
-    std.debug.print("Output directory: {s}\n\n", .{cfg.out_dir});
+    std.debug.print("Output directory: {s}\n", .{cfg.out_dir});
+    std.debug.print("Tracking top {d} clusters\n\n", .{cfg.top_n});
 
     // Ensure output directory exists
     try utils.ensureOutputDir(cfg.out_dir);
@@ -46,7 +47,7 @@ pub fn main() !void {
     }
 
     // Store initial state
-    try utils.captureState(&states, &perc, cfg.size);
+    try utils.captureState(&states, &perc, cfg.size, cfg.top_n);
     utils.logTiming(states_init_start, "States initialization");
 
     // Process bonds and capture states
@@ -56,7 +57,7 @@ pub fn main() !void {
 
     for (bonds.items) |bond| {
         perc.uf.merge(bond.site1, bond.site2);
-        try utils.captureState(&states, &perc, cfg.size);
+        try utils.captureState(&states, &perc, cfg.size, cfg.top_n);
 
         bonds_processed += 1;
         if (progress_interval > 0 and bonds_processed % progress_interval == 0) {

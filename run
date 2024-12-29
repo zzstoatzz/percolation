@@ -29,5 +29,5 @@ zig build && {
     fi
 
     # Visualize
-    uv run read.py $ANI_ARGS
+    TOP_N=$TOP_N uv run read.py $ANI_ARGS
 }
